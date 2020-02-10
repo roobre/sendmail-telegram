@@ -23,6 +23,9 @@ func main() {
 	app.Flags().StringP("s", "s", "", "Message subject. Overrides the 'Subject' header.")
 	app.Flags().StringP("f", "f", "", "Message sender. Overrides the 'From' header.")
 
+	// Eat up errors about unknown flags
+	app.FParseErrWhitelist.UnknownFlags = true
+
 	app.AddCommand(&cobra.Command{
 		Use:   "aid",
 		Short: "Print recent updates for the bot",
