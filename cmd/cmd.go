@@ -40,7 +40,7 @@ func main() {
 
 func newSmgtg() (*smtg.SendmailTg, error) {
 	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
-	v.SetConfigFile("sendmail-telegram.yml")
+	v.SetConfigName("sendmail-telegram")
 
 	v.AddConfigPath(".")
 
