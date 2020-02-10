@@ -19,9 +19,9 @@ func main() {
 		Run:   sendmail,
 		Args:  cobra.ArbitraryArgs,
 	}
-	app.Flags().Bool("t", true, "Extract recipients from message headers. These are added to any recipients specified on the command line.")
-	app.Flags().String("s", "", "Message subject. Overrides the 'Subject' header.")
-	app.Flags().String("f", "", "Message sender. Overrides the 'From' header.")
+	app.Flags().BoolP("t", "t", true, "Extract recipients from message headers. These are added to any recipients specified on the command line.")
+	app.Flags().StringP("s", "s", "", "Message subject. Overrides the 'Subject' header.")
+	app.Flags().StringP("f", "f", "", "Message sender. Overrides the 'From' header.")
 
 	app.AddCommand(&cobra.Command{
 		Use:   "aid",
