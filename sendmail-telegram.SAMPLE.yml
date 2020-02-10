@@ -1,0 +1,13 @@
+# Your bot token:
+token: XXXXXX:XXXXXXXXXXXXXXXXXxxxxxxxxxxxx
+
+# The format of the message, in text/template syntax:
+format: # Default will be used if blank (see sendmail-telegram.go)
+
+# Default chatID to send all emails to:
+catchAll: 12345678 # Hint: You can run `sendmail aid` after sending a message to your bot to see a chat ID
+
+# Associations to other addresses and chatIds
+addrMapping:
+  roobre@roobre-notarealsuffix.es: 87654321
+  other@address.tld: 31415926
