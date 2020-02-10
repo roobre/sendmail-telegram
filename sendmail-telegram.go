@@ -39,8 +39,8 @@ func New(config Config) (*SendmailTg, error) {
 		config: config,
 	}
 
-	if config.Format == "" {
-		config.Format = DefaultFormat
+	if strings.TrimSpace(config.Format) == "" {
+		stg.config.Format = DefaultFormat
 	}
 
 	botapi, err := tgbotapi.NewBotAPI(config.Token)
@@ -88,19 +88,6 @@ func (s *SendmailTg) Updates() ([]*tgbotapi.Chat, error) {
 }
 
 func (s *SendmailTg) Sendmail(to []*mail.Address, email *mail.Message) error {
-	for _, header := range []string{"To", "Cc", "Bcc"} {
-		bodyRecipients, err := email.Header.AddressList(header)
-		if err != nil && !errors.Is(err, mail.ErrHeaderNotPresent) {
-			return errors.New("could not parse address: " + err.Error())
-		}
-
-		to = append(to, bodyRecipients...)
-	}
-
-	if len(to) == 0 {
-		return errors.New("recipient list is empty")
-	}
-
 	body, err := ioutil.ReadAll(email.Body)
 	if err != nil {
 		return err
@@ -112,6 +99,7 @@ func (s *SendmailTg) Sendmail(to []*mail.Address, email *mail.Message) error {
 		templateContents[key] = strings.Join(val, ", ")
 	}
 	templateContents["Body"] = string(body)
+	// TODO: Maybe I should give the To header a special treatment as well
 
 	templ, err := template.New("emailtemplate").Parse(s.config.Format)
 	if err != nil {
@@ -122,6 +110,10 @@ func (s *SendmailTg) Sendmail(to []*mail.Address, email *mail.Message) error {
 	err = templ.Execute(msgBuf, templateContents)
 	if err != nil {
 		return err
+	}
+
+	if len(msgBuf.String()) == 0 {
+		return errors.New("refusing to send empty message")
 	}
 
 	tgmsg := tgbotapi.NewMessage(0, msgBuf.String())

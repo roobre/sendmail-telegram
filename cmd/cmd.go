@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -15,7 +16,9 @@ func main() {
 		Use:   "sendmail",
 		Short: "Send an email to telegram users through a bot",
 		Run:   sendmail,
+		Args:  cobra.ArbitraryArgs,
 	}
+	app.Flags().Bool("t", true, "Extract recipients from message headers. These are added to any recipients specified on the command line.")
 
 	app.AddCommand(&cobra.Command{
 		Use:   "aid",
@@ -90,5 +93,36 @@ func sendmail(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	fmt.Println(mailer.Sendmail(nil, msg))
+	var to []*mail.Address
+	for _, argAddr := range args {
+		addr, err := mail.ParseAddress(argAddr)
+		if err != nil {
+			log.Printf("error parsing address '%s', ignronig: %s", argAddr, err.Error())
+			continue
+		}
+		to = append(to, addr)
+	}
+
+	if parseTo, _ := cmd.Flags().GetBool("t"); parseTo {
+		for _, header := range []string{"To", "Cc", "Bcc"} {
+			bodyRecipients, err := msg.Header.AddressList(header)
+			if err != nil && !errors.Is(err, mail.ErrHeaderNotPresent) {
+				log.Printf("could not parse address: " + err.Error())
+				return
+			}
+
+			to = append(to, bodyRecipients...)
+		}
+	}
+
+	if len(to) == 0 {
+		log.Printf("recipient list is empty")
+		return
+	}
+
+	err = mailer.Sendmail(to, msg)
+	if err != nil {
+		log.Print(err)
+		return
+	}
 }
