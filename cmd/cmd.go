@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/mail"
+	"net/textproto"
 	"os"
 	smtg "roob.re/sendmail-telegram"
 )
@@ -19,6 +20,8 @@ func main() {
 		Args:  cobra.ArbitraryArgs,
 	}
 	app.Flags().Bool("t", true, "Extract recipients from message headers. These are added to any recipients specified on the command line.")
+	app.Flags().String("s", "", "Message subject. Overrides the 'Subject' header.")
+	app.Flags().String("f", "", "Message sender. Overrides the 'From' header.")
 
 	app.AddCommand(&cobra.Command{
 		Use:   "aid",
@@ -91,6 +94,14 @@ func sendmail(cmd *cobra.Command, args []string) {
 	msg, err := mail.ReadMessage(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if subject, _ := cmd.Flags().GetString("s"); subject != "" {
+		msg.Header[textproto.CanonicalMIMEHeaderKey("Subject")] = []string{subject}
+	}
+
+	if from, _ := cmd.Flags().GetString("f"); from != "" {
+		msg.Header[textproto.CanonicalMIMEHeaderKey("From")] = []string{from}
 	}
 
 	var to []*mail.Address
